@@ -142,7 +142,7 @@
 
         // Sambutan awal
         window.onload = () => {
-            typeMessage("halo welcome to chat michel ai ada yang bisa di bantu?", "michel");
+            typeMessage("halo welcome to chat michel ai ada yang bisa di bantu?", "bot");
         };
 
         // Fungsi untuk mengirim pesan
@@ -166,11 +166,11 @@
                 }
 
                 const data = await res.json(); // Parsing JSON respons
-                appendMessage(data.response, "michel"); // Tampilkan respons bot
+                appendMessage(data.response, "bot"); // Tampilkan respons bot
             } catch (error) {
                 // Tampilkan error jika fetch gagal
                 console.error("Error:", error);
-                appendMessage("Error connecting to chatbot!", "michel");
+                appendMessage("Error connecting to chatbot!", "bot");
             }
 
             userInput.value = ""; // Bersihkan input setelah pesan dikirim
