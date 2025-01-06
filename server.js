@@ -1,28 +1,74 @@
-const express = require("express");
-const axios = require("axios");
-const path = require("path");
+const express = require('express');
+const axios = require('axios');
+const path = require('path');
+
 const app = express();
+const port = process.env.PORT || 3000;
 
-const PORT = process.env.PORT || 3000; // Railway menggunakan variabel PORT jika tersedia
-
+// Middleware untuk parse data JSON
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Menghidangkan file index.html
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
-});
+// Menyajikan file statis (HTML, CSS, JS) dari folder publik
+app.use(express.static(path.join(__dirname, 'home.html')));
 
-app.post("/api/chat", async (req, res) => {
-    const { message } = req.body;
+// API untuk YouTube MP4/MP3
+app.get('/api/youtube', async (req, res) => {
+    const { url, format } = req.query;
+    if (!url || !format) {
+        return res.status(400).json({ error: 'URL dan format (mp4/mp3) diperlukan' });
+    }
+
     try {
-        const { data } = await axios.get("https://meitang.xyz/openai", {
-            params: { text: message },
-        });
-        res.json({ response: data.result });
+        // Gantikan URL API ini dengan API downloader YouTube yang sesuai
+        const response = await axios.get(`https://api.example.com/youtube?url=${url}&format=${format}`);
+        res.json(response.data);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ response: "Failed to fetch response from API." });
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil data' });
     }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// API untuk TikTok Downloader
+app.get('/api/tiktok', async (req, res) => {
+    const { url } = req.query;
+    if (!url) {
+        return res.status(400).json({ error: 'URL TikTok diperlukan' });
+    }
+
+    try {
+        // Gantikan URL API ini dengan API downloader TikTok yang sesuai
+        const response = await axios.get(`https://api.example.com/tiktok?url=${url}`);
+        res.json(response.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil data TikTok' });
+    }
+});
+
+// API untuk Instagram Downloader
+app.get('/api/instagram', async (req, res) => {
+    const { url } = req.query;
+    if (!url) {
+        return res.status(400).json({ error: 'URL Instagram diperlukan' });
+    }
+
+    try {
+        // Gantikan URL API ini dengan API downloader Instagram yang sesuai
+        const response = await axios.get(`https://api.example.com/instagram?url=${url}`);
+        res.json(response.data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil data Instagram' });
+    }
+});
+
+// Halaman utama
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'home.html'));
+});
+
+// Menjalankan server
+app.listen(port, () => {
+    console.log(`Server berjalan di http://localhost:${port}`);
+});
