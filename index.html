@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot AwanBrayy</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Gaya CSS sama seperti sebelumnya */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
             background: #343541;
@@ -19,103 +15,25 @@
             flex-direction: column;
             height: 100vh;
         }
-
-        /* Container utama */
-        #chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        /* Area pesan */
-        #chat-box {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        #chat-box::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        #chat-box::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 4px;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .message.user {
-            justify-content: flex-end;
-        }
-
-        .message span {
-            display: inline-block;
-            padding: 10px 15px;
-            border-radius: 10px;
-            max-width: 70%;
-            word-wrap: break-word;
-        }
-
-        .message.bot span {
-            background: #444654;
-            color: #fff;
-        }
-
-        .message.user span {
-            background: #1e90ff;
-            color: #fff;
-        }
-
-        /* Input pesan */
-        #chat-input {
-            background: #40414f;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            border-top: 1px solid #555;
-        }
-
-        #chat-input input {
-            flex: 1;
-            padding: 12px 15px;
-            border: none;
-            border-radius: 4px;
-            background: #343541;
-            color: #fff;
-            font-size: 16px;
-        }
-
-        #chat-input input:focus {
-            outline: none;
-        }
-
-        #send-btn {
-            margin-left: 10px;
-            padding: 12px 20px;
-            background: #1e90ff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        #send-btn:active {
-            background: #187bcd;
-        }
+        #chat-container { display: flex; flex-direction: column; height: 100%; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; }
+        #chat-box::-webkit-scrollbar { width: 8px; }
+        #chat-box::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        .message { margin-bottom: 10px; display: flex; align-items: flex-start; }
+        .message.user { justify-content: flex-end; }
+        .message span { display: inline-block; padding: 10px 15px; border-radius: 10px; max-width: 70%; word-wrap: break-word; }
+        .message.bot span { background: #444654; color: #fff; }
+        .message.user span { background: #1e90ff; color: #fff; }
+        #chat-input { background: #40414f; padding: 10px; display: flex; align-items: center; border-top: 1px solid #555; }
+        #chat-input input { flex: 1; padding: 12px 15px; border: none; border-radius: 4px; background: #343541; color: #fff; font-size: 16px; }
+        #chat-input input:focus { outline: none; }
+        #send-btn { margin-left: 10px; padding: 12px 20px; background: #1e90ff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        #send-btn:active { background: #187bcd; }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <!-- Area chat -->
         <div id="chat-box"></div>
-
-        <!-- Input pesan -->
         <div id="chat-input">
             <input type="text" id="user-input" placeholder="Type a message..." />
             <button id="send-btn">Send</button>
@@ -123,27 +41,29 @@
     </div>
 
     <script>
+        // Cek apakah akses langsung
+        if (document.referrer === "") {
+            window.location.href = "home.html"; // Redirect ke home jika langsung diakses
+        }
+
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
 
-        // Fungsi untuk menambahkan pesan ke chat
         const appendMessage = (message, type) => {
             const msgDiv = document.createElement("div");
             msgDiv.classList.add("message", type);
             msgDiv.innerHTML = `<span>${message}</span>`;
             chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll otomatis ke bawah
+            chatBox.scrollTop = chatBox.scrollHeight;
         };
 
-        // Event listener untuk tombol kirim
         sendBtn.addEventListener("click", async () => {
             const userMessage = userInput.value.trim();
             if (!userMessage) return;
 
-            appendMessage(userMessage, "user"); // Tambahkan pesan pengguna
+            appendMessage(userMessage, "user");
 
-            // Kirim pesan ke server
             try {
                 const res = await fetch("/api/chat", {
                     method: "POST",
@@ -152,15 +72,14 @@
                 });
 
                 const data = await res.json();
-                appendMessage(data.response, "bot"); // Tambahkan balasan bot
+                appendMessage(data.response, "bot");
             } catch (error) {
                 appendMessage("Error: Unable to connect to chatbot.", "bot");
             }
 
-            userInput.value = ""; // Kosongkan input
+            userInput.value = "";
         });
 
-        // Kirim pesan dengan tombol Enter
         userInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") sendBtn.click();
         });
