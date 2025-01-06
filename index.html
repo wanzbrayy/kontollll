@@ -1,0 +1,137 @@
+a<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - AwanBrayy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #1e1e2d;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #chat-container {
+            width: 400px;
+            background: #2a2a40;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #4e4e7c;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message span {
+            background: #4e4e7c;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.user span {
+            background: #1e90ff;
+        }
+
+        #chat-input {
+            display: flex;
+            padding: 10px;
+            background: #1e1e2d;
+        }
+
+        #chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #send-btn {
+            background: #1e90ff;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <header>
+            <h1>Chatbot AwanBrayy</h1>
+        </header>
+        <div id="chat-box"></div>
+        <div id="chat-input">
+            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+    <script>
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+
+        const appendMessage = (message, type) => {
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("message", type);
+            msgDiv.innerHTML = `<span>${message}</span>`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        sendBtn.addEventListener("click", async () => {
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+            appendMessage(userMessage, "user");
+
+            // Fetch response from server
+            try {
+                const res = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+                const data = await res.json();
+                appendMessage(data.response, "bot");
+            } catch (error) {
+                appendMessage("Error connecting to chatbot!", "bot");
+            }
+
+            userInput.value = "";
+        });
+    </script>
+</body>
+</html>
