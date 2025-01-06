@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MICHEL-AI</title>
+    <title>MICHEL -AI</title>
     <style>
         /* Global Styling */
         body {
@@ -12,12 +12,6 @@
             background: #1e1e2d;
             color: #fff;
             overflow: hidden;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
         }
 
         #chat-container {
@@ -31,7 +25,6 @@
             flex-direction: column;
             margin: auto;
             position: relative;
-            z-index: 1;
         }
 
         header {
@@ -46,6 +39,10 @@
             flex: 1;
             padding: 10px;
             overflow-y: auto;
+            overflow-x: hidden;
+            background: transparent;
+            position: relative;
+            z-index: 1;
         }
 
         .message {
@@ -96,27 +93,62 @@
         }
 
         #send-btn img {
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
+        }
+
+        .typing-message {
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Style for the welcome message */
+        .welcome-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        /* Particle container */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Prevent particles from blocking interactions */
+            z-index: 0;
         }
     </style>
 </head>
 <body>
-    <canvas></canvas>
     <div id="chat-container">
         <header>
-            <h1>MICHEL-AI</h1>
+            <h1>MICHEL - AI</h1>
         </header>
-        <div id="chat-box"></div>
+        <div id="chat-box">
+            <div class="welcome-message" id="welcome-message">
+                <div class="typing-message" id="typing-message"></div>
+            </div>
+        </div>
         <div id="chat-input">
-            <input type="text" id="user-input" placeholder="ketikan sesuatu...">
+            <input type="text" id="user-input" placeholder="Ask me anything...">
             <button id="send-btn"><img src="https://img101.pixhost.to/images/376/551888124_wanzofc.png" alt="Send"></button>
         </div>
     </div>
+    <canvas id="particle-canvas"></canvas>
+    
     <script>
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
+        const welcomeMessage = document.getElementById("welcome-message");
+        const typingMessage = document.getElementById("typing-message");
 
         // Fungsi untuk menambahkan pesan ke dalam chat
         const appendMessage = (message, type) => {
@@ -124,7 +156,6 @@
             msgDiv.classList.add("message", type);
             msgDiv.innerHTML = `<span>${message}</span>`;
             chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll otomatis ke bawah
         };
 
         // Fungsi efek typing
@@ -138,11 +169,6 @@
                     clearInterval(typingInterval);
                 }
             }, delay);
-        };
-
-        // Sambutan awal
-        window.onload = () => {
-            typeMessage("halo welcome to chat michel ai ada yang bisa di bantu?", "bot");
         };
 
         // Fungsi untuk mengirim pesan
@@ -176,20 +202,17 @@
             userInput.value = ""; // Bersihkan input setelah pesan dikirim
         });
 
-        // Kirim pesan dengan menekan tombol Enter
-        userInput.addEventListener("keypress", (event) => {
-            if (event.key === "Enter") {
-                sendBtn.click(); // Panggil fungsi kirim
-            }
-        });
+        // Efek partikel garis-garis neon acak di dalam chat
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Efek partikel garis-garis
-        const canvas = document.querySelector("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Menyesuaikan ukuran canvas sesuai dengan ukuran #chat-box
+        canvas.width = document.getElementById('chat-box').offsetWidth;
+        canvas.height = document.getElementById('chat-box').offsetHeight;
 
         const lines = [];
+        const colors = ["#ff00ff", "#00ff00", "#00ffff", "#ffff00", "#ff0000", "#ffffff"]; // Neon colors
+
         for (let i = 0; i < 100; i++) {
             lines.push({
                 x: Math.random() * canvas.width,
@@ -197,6 +220,7 @@
                 dx: Math.random() * 2 - 1,
                 dy: Math.random() * 2 - 1,
                 length: Math.random() * 50 + 20,
+                color: colors[Math.floor(Math.random() * colors.length)],
             });
         }
 
@@ -206,7 +230,8 @@
                 ctx.beginPath();
                 ctx.moveTo(line.x, line.y);
                 ctx.lineTo(line.x + line.dx * line.length, line.y + line.dy * line.length);
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
                 line.x += line.dx;
                 line.y += line.dy;
@@ -219,6 +244,19 @@
         }
 
         drawLines();
+
+        // Efek typing sambutan
+        let welcomeText = "hai aku michel ada yang bisa dibantu?";
+        let welcomeIndex = 0;
+
+        const typingInterval = setInterval(() => {
+            if (welcomeIndex < welcomeText.length) {
+                typingMessage.textContent += welcomeText[welcomeIndex];
+                welcomeIndex++;
+            } else {
+                clearInterval(typingInterval);
+            }
+        }, 100); // Typing speed (100ms per character)
     </script>
 </body>
 </html>
