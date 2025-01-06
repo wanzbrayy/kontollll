@@ -1,29 +1,37 @@
-a<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot - AwanBrayy</title>
+    <title>MICHEL-AI</title>
     <style>
+        /* Global Styling */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             background: #1e1e2d;
             color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         #chat-container {
-            width: 400px;
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
             background: #2a2a40;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
             display: flex;
             flex-direction: column;
+            margin: auto;
+            position: relative;
+            z-index: 1;
         }
 
         header {
@@ -31,6 +39,7 @@ a<!DOCTYPE html>
             padding: 15px;
             text-align: center;
             font-size: 18px;
+            flex-shrink: 0;
         }
 
         #chat-box {
@@ -58,6 +67,7 @@ a<!DOCTYPE html>
             padding: 8px 12px;
             border-radius: 8px;
             max-width: 70%;
+            word-wrap: break-word;
         }
 
         .message.user span {
@@ -68,6 +78,7 @@ a<!DOCTYPE html>
             display: flex;
             padding: 10px;
             background: #1e1e2d;
+            flex-shrink: 0;
         }
 
         #chat-input input {
@@ -78,25 +89,28 @@ a<!DOCTYPE html>
         }
 
         #send-btn {
-            background: #1e90ff;
-            color: #fff;
+            background: none;
             border: none;
-            padding: 10px 15px;
             margin-left: 10px;
             cursor: pointer;
-            border-radius: 4px;
+        }
+
+        #send-btn img {
+            width: 30px;
+            height: 30px;
         }
     </style>
 </head>
 <body>
+    <canvas></canvas>
     <div id="chat-container">
         <header>
-            <h1>Chatbot AwanBrayy</h1>
+            <h1>MICHEL-AI</h1>
         </header>
         <div id="chat-box"></div>
         <div id="chat-input">
-            <input type="text" id="user-input" placeholder="Ask me anything...">
-            <button id="send-btn">Send</button>
+            <input type="text" id="user-input" placeholder="ketikan sesuatu...">
+            <button id="send-btn"><img src="https://img101.pixhost.to/images/376/551888124_wanzofc.png" alt="Send"></button>
         </div>
     </div>
     <script>
@@ -104,34 +118,107 @@ a<!DOCTYPE html>
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
 
+        // Fungsi untuk menambahkan pesan ke dalam chat
         const appendMessage = (message, type) => {
             const msgDiv = document.createElement("div");
             msgDiv.classList.add("message", type);
             msgDiv.innerHTML = `<span>${message}</span>`;
             chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll otomatis ke bawah
         };
 
+        // Fungsi efek typing
+        const typeMessage = (message, type, delay = 50) => {
+            let index = 0;
+            const typingInterval = setInterval(() => {
+                if (index < message.length) {
+                    appendMessage(message.slice(0, index + 1), type);
+                    index++;
+                } else {
+                    clearInterval(typingInterval);
+                }
+            }, delay);
+        };
+
+        // Sambutan awal
+        window.onload = () => {
+            typeMessage("halo welcome to chat michel ai ada yang bisa di bantu?", "michel");
+        };
+
+        // Fungsi untuk mengirim pesan
         sendBtn.addEventListener("click", async () => {
             const userMessage = userInput.value.trim();
-            if (!userMessage) return;
-            appendMessage(userMessage, "user");
+            if (!userMessage) return; // Tidak kirim jika input kosong
 
-            // Fetch response from server
+            appendMessage(userMessage, "user"); // Tampilkan pesan pengguna
+
             try {
+                // Kirim permintaan ke API
                 const res = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMessage }),
+                    body: JSON.stringify({ message: userMessage }), // Kirim pesan pengguna
                 });
-                const data = await res.json();
-                appendMessage(data.response, "bot");
+
+                if (!res.ok) {
+                    // Jika respon API tidak berhasil
+                    throw new Error(`Server returned ${res.status}`);
+                }
+
+                const data = await res.json(); // Parsing JSON respons
+                appendMessage(data.response, "michel"); // Tampilkan respons bot
             } catch (error) {
-                appendMessage("Error connecting to chatbot!", "bot");
+                // Tampilkan error jika fetch gagal
+                console.error("Error:", error);
+                appendMessage("Error connecting to chatbot!", "michel");
             }
 
-            userInput.value = "";
+            userInput.value = ""; // Bersihkan input setelah pesan dikirim
         });
+
+        // Kirim pesan dengan menekan tombol Enter
+        userInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                sendBtn.click(); // Panggil fungsi kirim
+            }
+        });
+
+        // Efek partikel garis-garis
+        const canvas = document.querySelector("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const lines = [];
+        for (let i = 0; i < 100; i++) {
+            lines.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                dx: Math.random() * 2 - 1,
+                dy: Math.random() * 2 - 1,
+                length: Math.random() * 50 + 20,
+            });
+        }
+
+        function drawLines() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            lines.forEach((line) => {
+                ctx.beginPath();
+                ctx.moveTo(line.x, line.y);
+                ctx.lineTo(line.x + line.dx * line.length, line.y + line.dy * line.length);
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+                ctx.stroke();
+                line.x += line.dx;
+                line.y += line.dy;
+
+                if (line.x < 0 || line.x > canvas.width) line.dx *= -1;
+                if (line.y < 0 || line.y > canvas.height) line.dy *= -1;
+            });
+
+            requestAnimationFrame(drawLines);
+        }
+
+        drawLines();
     </script>
 </body>
 </html>
