@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AwanBrayy - Home</title>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2d;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #343541;
+        }
+
+        #menu-btn, #profile-btn {
+            background: #4e4e7c;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #menu-btn:active, #profile-btn:active {
+            background: #40414f;
+        }
+
+        #profile-btn {
+            display: flex;
+            align-items: center;
+        }
+
+        #profile-btn img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            height: 100%;
+            width: 250px;
+            background: #2a2a40;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        #sidebar.open {
+            left: 0;
+        }
+
+        #sidebar a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background: #4e4e7c;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        #sidebar a:hover {
+            background: #40414f;
+        }
+
+        /* Main Content */
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #main h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        #chat-btn {
+            background: #1e90ff;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #chat-btn:hover {
+            background: #187bcd;
+        }
+
+        /* Downloader Section */
+        #downloader {
+            padding: 20px;
+            background: #343541;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        input {
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #4e4e7c;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: #2a2a40;
+            color: #fff;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #1e90ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #187bcd;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #2a2a40;
+            border-radius: 4px;
+            max-width: 90%;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button id="menu-btn">☰</button>
+        <button id="profile-btn">Profile <img src="https://via.placeholder.com/30" alt="Profile"></button>
+    </header>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <a href="javascript:void(0)" onclick="toggleDownloader('youtube-mp4')">YouTube MP4</a>
+        <a href="javascript:void(0)" onclick="toggleDownloader('youtube-mp3')">YouTube MP3</a>
+        <a href="javascript:void(0)" onclick="openAPI('tiktok')">TikTok Downloader</a>
+        <a href="javascript:void(0)" onclick="openAPI('instagram')">Instagram Downloader</a>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main">
+        <h1>Welcome to AwanBrayy</h1>
+        <p>Choose a menu from the sidebar or start chatting with the chatbot!</p>
+        <button id="chat-btn" onclick="startChat()">Start Chatting</button>
+    </div>
+
+    <!-- Downloader Section -->
+    <div id="downloader" style="display: none;">
+        <h2 id="downloader-title"></h2>
+        <input type="text" id="url-input" placeholder="Enter URL" required>
+        <button onclick="download()">Download</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Sidebar toggle functionality
+        const menuBtn = document.getElementById("menu-btn");
+        const sidebar = document.getElementById("sidebar");
+
+        menuBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+        });
+
+        // Show downloader for YouTube MP4/MP3 or API links
+        function toggleDownloader(type) {
+            const downloader = document.getElementById("downloader");
+            const urlInput = document.getElementById("url-input");
+            const title = document.getElementById("downloader-title");
+            downloader.style.display = 'block';
+            urlInput.value = '';
+            if (type === 'youtube-mp4') {
+                title.textContent = 'YouTube MP4 Downloader';
+                urlInput.placeholder = 'Enter YouTube URL for MP4';
+            } else if (type === 'youtube-mp3') {
+                title.textContent = 'YouTube MP3 Downloader';
+                urlInput.placeholder = 'Enter YouTube URL for MP3';
+            }
+        }
+
+        // Handle download process
+        async function download() {
+            const url = document.getElementById("url-input").value;
+            const resultDiv = document.getElementById("result");
+
+            try {
+                const response = await fetch(`/api/youtube?url=${encodeURIComponent(url)}&format=${document.getElementById("downloader-title").textContent.includes('MP4') ? 'mp4' : 'mp3'}`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.textContent = "Error fetching data. Please try again.";
+            }
+        }
+
+        // API endpoint for TikTok and Instagram
+        function openAPI(platform) {
+            let url = '';
+            if (platform === 'tiktok') {
+                url = prompt('Enter TikTok video URL:');
+            } else if (platform === 'instagram') {
+                url = prompt('Enter Instagram video URL:');
+            }
+            if (url) {
+                fetch(`/api/${platform}?url=${encodeURIComponent(url)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(JSON.stringify(data, null, 2));
+                    })
+                    .catch(error => {
+                        alert('Error fetching data!');
+                    });
+            }
+        }
+
+        // Start Chat functionality
+        function startChat() {
+            window.location.href = "index.html"; // Link to your chat page
+        }
+    </script>
+</body>
+</html>
