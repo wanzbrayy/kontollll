@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MICHEL -AI</title>
+    <title>MICHEL - AI</title>
     <style>
         /* Global Styling */
         body {
@@ -115,8 +115,6 @@
             font-size: 16px;
         }
 
-        /* Footer Styling */
-        
         /* Particle container */
         #particle-canvas {
             position: absolute;
@@ -153,25 +151,37 @@
         const welcomeMessage = document.getElementById("welcome-message");
         const typingMessage = document.getElementById("typing-message");
 
+        const YOUTUBE_API_KEY = "AIzaSyBea6oG4T6FTNMgiVh8nux7d2HM89QHR0g"; // API Key YouTube
+
         // Fungsi untuk menambahkan pesan ke dalam chat
         const appendMessage = (message, type) => {
             const msgDiv = document.createElement("div");
             msgDiv.classList.add("message", type);
             msgDiv.innerHTML = `<span>${message}</span>`;
             chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll ke bawah otomatis
         };
 
-        // Fungsi efek typing
-        const typeMessage = (message, type, delay = 50) => {
-            let index = 0;
-            const typingInterval = setInterval(() => {
-                if (index < message.length) {
-                    appendMessage(message.slice(0, index + 1), type);
-                    index++;
-                } else {
-                    clearInterval(typingInterval);
-                }
-            }, delay);
+        // Fungsi untuk mendapatkan video dari YouTube
+        const fetchYouTubeVideo = async (query) => {
+            const res = await fetch(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YOUTUBE_API_KEY}&maxResults=1`
+            );
+            const data = await res.json();
+            if (data.items && data.items.length > 0) {
+                return `https://www.youtube.com/embed/${data.items[0].id.videoId}`;
+            }
+            return null;
+        };
+
+        // Fungsi untuk menambahkan video ke chat
+        const appendVideo = (videoUrl) => {
+            const videoFrame = document.createElement("iframe");
+            videoFrame.src = videoUrl;
+            videoFrame.width = "100%";
+            videoFrame.height = "200";
+            videoFrame.style.border = "none";
+            chatBox.appendChild(videoFrame);
         };
 
         // Fungsi untuk mengirim pesan
@@ -181,72 +191,43 @@
 
             appendMessage(userMessage, "user"); // Tampilkan pesan pengguna
 
-            try {
-                // Kirim permintaan ke API
-                const res = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMessage }), // Kirim pesan pengguna
-                });
-
-                if (!res.ok) {
-                    // Jika respon API tidak berhasil
-                    throw new Error(`Server returned ${res.status}`);
+            // Deteksi jika pesan meminta video
+            if (userMessage.toLowerCase().startsWith("tonton:")) {
+                const query = userMessage.slice(7).trim(); // Ambil kata kunci setelah "tonton:"
+                if (query) {
+                    const videoUrl = await fetchYouTubeVideo(query);
+                    if (videoUrl) {
+                        appendMessage("Menampilkan video dari YouTube...", "bot");
+                        appendVideo(videoUrl);
+                    } else {
+                        appendMessage("Maaf, video tidak ditemukan!", "bot");
+                    }
+                } else {
+                    appendMessage("Masukkan kata kunci setelah 'tonton:'!", "bot");
                 }
+            } else {
+                try {
+                    // Kirim permintaan ke API chatbot
+                    const res = await fetch("/api/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: userMessage }),
+                    });
 
-                const data = await res.json(); // Parsing JSON respons
-                appendMessage(data.response, "bot"); // Tampilkan respons bot
-            } catch (error) {
-                // Tampilkan error jika fetch gagal
-                console.error("Error:", error);
-                appendMessage("Error connecting to chatbot!", "bot");
+                    if (!res.ok) {
+                        throw new Error(`Server returned ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    appendMessage(data.response, "bot");
+                } catch (error) {
+                    console.error("Error:", error);
+                    appendMessage("Error connecting to chatbot!", "bot");
+                }
             }
 
             userInput.value = ""; // Bersihkan input setelah pesan dikirim
         });
-
-        // Efek partikel garis-garis neon acak di dalam chat
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Menyesuaikan ukuran canvas sesuai dengan ukuran #chat-box
-        canvas.width = document.getElementById('chat-box').offsetWidth;
-        canvas.height = document.getElementById('chat-box').offsetHeight;
-
-        const lines = [];
-        const colors = ["#ff00ff", "#00ff00", "#00ffff", "#ffff00", "#ff0000", "#ffffff"]; // Neon colors
-
-        for (let i = 0; i < 100; i++) {
-            lines.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                dx: Math.random() * 2 - 1,
-                dy: Math.random() * 2 - 1,
-                length: Math.random() * 50 + 20,
-                color: colors[Math.floor(Math.random() * colors.length)],
-            });
-        }
-
-        function drawLines() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            lines.forEach((line) => {
-                ctx.beginPath();
-                ctx.moveTo(line.x, line.y);
-                ctx.lineTo(line.x + line.dx * line.length, line.y + line.dy * line.length);
-                ctx.strokeStyle = line.color;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                line.x += line.dx;
-                line.y += line.dy;
-
-                if (line.x < 0 || line.x > canvas.width) line.dx *= -1;
-                if (line.y < 0 || line.y > canvas.height) line.dy *= -1;
-            });
-
-            requestAnimationFrame(drawLines);
-        }
-
-        drawLines();
 
         // Efek typing sambutan
         let welcomeText = "hai aku michel ada yang bisa dibantu?";
