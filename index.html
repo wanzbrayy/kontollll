@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MICHEL - AI</title>
     <style>
-        /* Global Styling */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -58,7 +57,7 @@
             justify-content: flex-start;
         }
 
-        .message span {
+        .message span, .message iframe {
             background: #4e4e7c;
             color: #fff;
             padding: 8px 12px;
@@ -76,7 +75,6 @@
             padding: 10px;
             background: #1e1e2d;
             flex-shrink: 0;
-            margin-bottom: 50px; /* Menambahkan margin-bottom untuk memberi jarak dengan footer */
         }
 
         #chat-input input {
@@ -97,34 +95,6 @@
             width: 40px;
             height: 40px;
         }
-
-        .typing-message {
-            color: #fff;
-            font-size: 16px;
-            text-align: center;
-            padding: 10px;
-        }
-
-        /* Style for the welcome message */
-        .welcome-message {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding: 15px;
-            font-size: 16px;
-        }
-
-        /* Particle container */
-        #particle-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Prevent particles from blocking interactions */
-            z-index: 0;
-        }
     </style>
 </head>
 <body>
@@ -132,115 +102,99 @@
         <header>
             <h1>MICHEL - AI</h1>
         </header>
-        <div id="chat-box">
-            <div class="welcome-message" id="welcome-message">
-                <div class="typing-message" id="typing-message"></div>
-            </div>
-        </div>
+        <div id="chat-box"></div>
         <div id="chat-input">
-            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <input type="text" id="user-input" placeholder="Ketik sesuatu atau gunakan 'yt [kata kunci]' untuk mencari video YouTube">
             <button id="send-btn"><img src="https://img101.pixhost.to/images/376/551888124_wanzofc.png" alt="Send"></button>
         </div>
     </div>
-    <canvas id="particle-canvas"></canvas>
 
     <script>
+        const YT_API_KEY = "AIzaSyBea6oG4T6FTNMgiVh8nux7d2HM89QHR0g"; // Masukkan API Key YouTube V3 Anda
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
-        const welcomeMessage = document.getElementById("welcome-message");
-        const typingMessage = document.getElementById("typing-message");
 
-        const YOUTUBE_API_KEY = "AIzaSyBea6oG4T6FTNMgiVh8nux7d2HM89QHR0g"; // API Key YouTube
-
-        // Fungsi untuk menambahkan pesan ke dalam chat
+        // Fungsi untuk menambahkan pesan ke chat box
         const appendMessage = (message, type) => {
             const msgDiv = document.createElement("div");
             msgDiv.classList.add("message", type);
-            msgDiv.innerHTML = `<span>${message}</span>`;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll ke bawah otomatis
-        };
 
-        // Fungsi untuk mendapatkan video dari YouTube
-        const fetchYouTubeVideo = async (query) => {
-            const res = await fetch(
-                `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${query}&key=${YOUTUBE_API_KEY}&maxResults=1`
-            );
-            const data = await res.json();
-            if (data.items && data.items.length > 0) {
-                return `https://www.youtube.com/embed/${data.items[0].id.videoId}`;
+            if (type === "bot" && message.includes("<iframe")) {
+                msgDiv.innerHTML = message; // Jika pesan adalah embed video
+            } else {
+                msgDiv.innerHTML = `<span>${message}</span>`;
             }
-            return null;
+
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll otomatis ke bawah
         };
 
-        // Fungsi untuk menambahkan video ke chat
-        const appendVideo = (videoUrl) => {
-            const videoFrame = document.createElement("iframe");
-            videoFrame.src = videoUrl;
-            videoFrame.width = "100%";
-            videoFrame.height = "200";
-            videoFrame.style.border = "none";
-            chatBox.appendChild(videoFrame);
+        // Fungsi untuk mencari video di YouTube
+        const searchYouTube = async (query) => {
+            try {
+                const res = await fetch(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${YT_API_KEY}&maxResults=1&type=video`
+                );
+                const data = await res.json();
+                return data.items[0];
+            } catch (error) {
+                console.error("YouTube API Error:", error);
+                return null;
+            }
         };
 
-        // Fungsi untuk mengirim pesan
+        // Fungsi untuk menangani pengiriman pesan
         sendBtn.addEventListener("click", async () => {
             const userMessage = userInput.value.trim();
-            if (!userMessage) return; // Tidak kirim jika input kosong
+            if (!userMessage) return;
 
             appendMessage(userMessage, "user"); // Tampilkan pesan pengguna
 
-            // Deteksi jika pesan meminta video
-            if (userMessage.toLowerCase().startsWith("tonton:")) {
-                const query = userMessage.slice(7).trim(); // Ambil kata kunci setelah "tonton:"
-                if (query) {
-                    const videoUrl = await fetchYouTubeVideo(query);
-                    if (videoUrl) {
-                        appendMessage("Menampilkan video dari YouTube...", "bot");
-                        appendVideo(videoUrl);
-                    } else {
-                        appendMessage("Maaf, video tidak ditemukan!", "bot");
-                    }
+            // Cek apakah pesan dimulai dengan 'yt '
+            if (userMessage.startsWith("yt ")) {
+                const query = userMessage.slice(3); // Ambil kata kunci setelah 'yt '
+                appendMessage("Mencari video di YouTube...", "bot");
+
+                const video = await searchYouTube(query);
+                if (video) {
+                    const videoEmbed = `
+                        <iframe 
+                            width="100%" 
+                            height="200" 
+                            src="https://www.youtube.com/embed/${video.id.videoId}" 
+                            frameborder="0" 
+                            allowfullscreen>
+                        </iframe>`;
+                    appendMessage(videoEmbed, "bot"); // Tampilkan video dalam chat box
                 } else {
-                    appendMessage("Masukkan kata kunci setelah 'tonton:'!", "bot");
+                    appendMessage("Maaf, tidak ditemukan video yang cocok.", "bot");
                 }
             } else {
+                // Jika bukan format 'yt', kirim permintaan ke chatbot server
                 try {
-                    // Kirim permintaan ke API chatbot
                     const res = await fetch("/api/chat", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: userMessage }),
+                        body: JSON.stringify({ message: userMessage }), // Kirim pesan pengguna
                     });
 
                     if (!res.ok) {
+                        // Jika respon API tidak berhasil
                         throw new Error(`Server returned ${res.status}`);
                     }
 
-                    const data = await res.json();
-                    appendMessage(data.response, "bot");
+                    const data = await res.json(); // Parsing JSON respons
+                    appendMessage(data.response, "bot"); // Tampilkan respons bot
                 } catch (error) {
+                    // Tampilkan error jika fetch gagal
                     console.error("Error:", error);
                     appendMessage("Error connecting to chatbot!", "bot");
                 }
             }
 
-            userInput.value = ""; // Bersihkan input setelah pesan dikirim
+            userInput.value = ""; // Bersihkan input setelah mengirim pesan
         });
-
-        // Efek typing sambutan
-        let welcomeText = "hai aku michel ada yang bisa dibantu?";
-        let welcomeIndex = 0;
-
-        const typingInterval = setInterval(() => {
-            if (welcomeIndex < welcomeText.length) {
-                typingMessage.textContent += welcomeText[welcomeIndex];
-                welcomeIndex++;
-            } else {
-                clearInterval(typingInterval);
-            }
-        }, 100); // Typing speed (100ms per character)
     </script>
 </body>
 </html>
