@@ -175,7 +175,7 @@
                 <label for="chatbot-avatar">Avatar Chatbot URL:</label>
                 <input type="url" id="chatbot-avatar" value="/images/default-avatar.jpg" required />
                 <br>
-                <button type="submit">Simpan</button>
+                <button type="submit" id="save-customize-btn">Simpan</button>
             </form>
             <button id="close-customize-btn">Tutup</button>
         </div>
@@ -202,6 +202,7 @@
         const customizeModal = document.getElementById("customize-modal");
         const closeCustomizeBtn = document.getElementById("close-customize-btn");
         const customizeForm = document.getElementById("customize-form");
+        const saveCustomizeBtn = document.getElementById("save-customize-btn");
 
         // Fungsi untuk menambahkan pesan ke chat box
         const appendMessage = (message, type) => {
@@ -293,28 +294,20 @@
             customizeModal.style.display = "none";
         });
 
-        customizeForm.addEventListener("submit", (e) => {
+        // Event Listener untuk tombol simpan
+        saveCustomizeBtn.addEventListener("click", (e) => {
             e.preventDefault();
             const name = document.getElementById("chatbot-name").value;
             const avatar = document.getElementById("chatbot-avatar").value;
             
-            // Kirim permintaan untuk mengubah nama dan avatar chatbot
-            fetch("/api/customize-chatbot", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, avatar }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert("Chatbot berhasil dikustomisasi!");
-                // Update UI chatbot
-                document.querySelector("header h1").textContent = data.settings.name;
-                document.querySelector("#chat-container").style.backgroundImage = `url(${data.settings.avatar})`;
-            })
-            .catch(error => {
-                alert("Error mengkustomisasi chatbot.");
-                console.error(error);
-            });
+            // Update tampilan chatbot setelah kustomisasi
+            alert(`Chatbot berhasil dikustomisasi! Nama: ${name}, Avatar: ${avatar}`);
+
+            document.querySelector("header h1").textContent = name;
+            // Misalnya, Anda bisa memuat avatar baru menggunakan gambar URL dari input
+            // document.querySelector("#chat-container").style.backgroundImage = `url(${avatar})`;
+            
+            // Tutup modal setelah kustomisasi
             customizeModal.style.display = "none";
         });
 
