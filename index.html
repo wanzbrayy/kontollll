@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MICHEL - AI</title>
+    <title>Chatbot - MICHEL AI</title>
     <style>
-        body {
+                body {
             font-family: Arial, sans-serif;
             margin: 0;
             background: #1e1e2d;
@@ -205,52 +205,20 @@
     </style>
 </head>
 <body>
-    <div id="chat-container">
-        <header>
-            <h1 id="bot-name">MICHEL - AI</h1>
-            <img id="avatar" src="https://img101.pixhost.to/images/293/550093499_wanzofc.jpg" alt="Chatbot Avatar">
-            <button id="change-avatar-btn">Ganti Avatar</button>
-            <button id="change-name-btn">Ganti Nama</button>
-        </header>
-        <div id="chat-box"></div>
-        <div id="chat-input">
-            <input type="text" id="user-input" placeholder="Ketik sesuatu atau gunakan 'yt [kata kunci]' untuk mencari video YouTube">
-            <button id="send-btn"><img src="https://img101.pixhost.to/images/376/551888124_wanzofc.png" alt="Send"></button>
-            <input type="file" id="media-upload" style="display: none;">
-            <button id="upload-btn"><img src="https://img.icons8.com/fluency/48/000000/upload.png" alt="Upload"></button>
-        </div>
+    <div id="chat-box"></div>
+    <div>
+        <input type="text" id="user-input" placeholder="Ketik pesan...">
+        <button id="send-btn">Kirim</button>
+        <button id="upload-btn">Upload Media</button>
+        <input type="file" id="media-upload" style="display: none;">
     </div>
 
-    <!-- Modal for changing Avatar -->
-    <div id="avatar-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Ganti Avatar</h2>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="new-avatar-url" placeholder="Masukkan URL gambar baru untuk avatar">
-            </div>
-            <div class="modal-footer">
-                <button id="save-avatar-btn">Simpan</button>
-                <button id="close-avatar-modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for changing Name -->
-    <div id="name-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Ganti Nama Chatbot</h2>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="new-name" placeholder="Masukkan nama baru untuk chatbot">
-            </div>
-            <div class="modal-footer">
-                <button id="save-name-btn">Simpan</button>
-                <button id="close-name-modal">Tutup</button>
-            </div>
-        </div>
+    <!-- Modal untuk mengganti avatar dan nama -->
+    <div id="adminModal" style="display: none;">
+        <input type="text" id="adminPassword" placeholder="Password admin">
+        <button id="loginBtn">Login</button>
+        <button id="change-avatar-btn">Change Avatar</button>
+        <button id="change-name-btn">Change Name</button>
     </div>
 
     <script>
@@ -266,142 +234,133 @@
         const avatar = document.getElementById("avatar");
         const changeAvatarBtn = document.getElementById("change-avatar-btn");
         const changeNameBtn = document.getElementById("change-name-btn");
-
         let adminLoggedIn = false;
         let userAvatar = avatar.src;
         let botName = "MICHEL - AI";
 
-        // Modal elements
-        const avatarModal = document.getElementById("avatar-modal");
-        const nameModal = document.getElementById("name-modal");
-        const saveAvatarBtn = document.getElementById("save-avatar-btn");
-        const saveNameBtn = document.getElementById("save-name-btn");
-        const newAvatarUrl = document.getElementById("new-avatar-url");
-        const newName = document.getElementById("new-name");
-        const closeAvatarModal = document.getElementById("close-avatar-modal");
-        const closeNameModal = document.getElementById("close-name-modal");
+        // Mengirim pesan ke API Chatbot
+        async function chatWithBot(message) {
+            try {
+                const response = await fetch('/api/chat', { // Mengarahkan ke server.js untuk endpoint /api/chat
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message }) // Mengirimkan pesan ke server
+                });
 
-        // Send message functionality
-        sendBtn.addEventListener("click", async () => {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            addMessage("user", message);
-            userInput.value = "";
-
-            // Check if message contains 'yt'
-            if (message.toLowerCase().startsWith('yt ')) {
-                const query = message.slice(3);
-                await searchYouTube(query);
-                return;
+                const data = await response.json(); // Menangani respons dari server
+                if (data && data.response) {
+                    addMessage("bot", data.response); // Menambahkan pesan bot ke chatbox
+                } else {
+                    addMessage("bot", "Bot tidak dapat menjawab permintaan Anda.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                addMessage("bot", "Terjadi kesalahan dalam komunikasi dengan server.");
             }
-
-            // Otherwise, send the message to the bot
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message }),
-            });
-
-            const data = await response.json();
-            addMessage("bot", data.reply);
-        });
-
-        async function searchYouTube(query) {
-            addMessage("bot", "Mencari video YouTube...");
-            const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${YT_API_KEY}`);
-            const data = await response.json();
-
-            if (data.items && data.items.length > 0) {
-                const video = data.items[0];
-                const videoUrl = `https://www.youtube.com/watch?v=${video.id.videoId}`;
-                addMessage("bot", `Ditemukan video: ${video.snippet.title}`);
-                const iframe = document.createElement("iframe");
-                iframe.src = `https://www.youtube.com/embed/${video.id.videoId}`;
-                iframe.frameBorder = "0";
-                iframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture";
-                iframe.allowFullscreen = true;
-                chatBox.appendChild(iframe);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } else {
-                addMessage("bot", "Tidak ditemukan video.");
-            }
-            setTimeout(() => {
-                addMessage("bot", "Bot siap melayani Anda lagi!");
-            }, 2000);
         }
 
+        // Menambahkan pesan ke chatbox
         function addMessage(sender, message) {
             const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message", sender);
-            messageDiv.innerHTML = `<span>${message}</span>`;
+            messageDiv.classList.add(sender);
+            messageDiv.textContent = message;
             chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Avatar change functionality
-        changeAvatarBtn.addEventListener("click", () => {
-            avatarModal.style.display = "flex";
-        });
-
-        saveAvatarBtn.addEventListener("click", () => {
-            const newAvatar = newAvatarUrl.value.trim();
-            if (newAvatar) {
-                avatar.src = newAvatar;
-                avatarModal.style.display = "none";
+        // Fungsi untuk menangani input pengguna dan mengirim ke chatbot
+        sendBtn.addEventListener('click', () => {
+            const message = userInput.value;
+            if (message) {
+                addMessage("user", message);
+                chatWithBot(message);
+                userInput.value = ''; // Mengosongkan input setelah mengirim
             }
         });
 
-        // Name change functionality
-        changeNameBtn.addEventListener("click", () => {
-            nameModal.style.display = "flex";
+        // Fungsi untuk upload media
+        uploadBtn.addEventListener('click', () => {
+            mediaUploadInput.click(); // Memicu input file
         });
 
-        saveNameBtn.addEventListener("click", () => {
-            const newBotName = newName.value.trim();
-            if (newBotName) {
-                botName = newBotName;
-                document.getElementById("bot-name").textContent = botName;
-                nameModal.style.display = "none";
-            }
-        });
-
-        // Close avatar modal
-        closeAvatarModal.addEventListener("click", () => {
-            avatarModal.style.display = "none";
-        });
-
-        // Close name modal
-        closeNameModal.addEventListener("click", () => {
-            nameModal.style.display = "none";
-        });
-
-        // Media upload functionality
-        uploadBtn.addEventListener("click", () => {
-            mediaUploadInput.click();
-        });
-
-        mediaUploadInput.addEventListener("change", async () => {
+        mediaUploadInput.addEventListener('change', async () => {
             const file = mediaUploadInput.files[0];
-            if (!file) return;
+            if (file) {
+                const formData = new FormData();
+                formData.append("media", file);
 
-            const formData = new FormData();
-            formData.append("file", file);
+                try {
+                    const uploadResponse = await fetch('/api/upload-media', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-            const response = await fetch('/api/upload-media', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                addMessage("bot", "Media berhasil diupload!");
-            } else {
-                addMessage("bot", "Gagal mengupload media.");
+                    const uploadData = await uploadResponse.json();
+                    if (uploadData.message === 'Media uploaded successfully') {
+                        addMessage("bot", "Media berhasil diupload!");
+                    } else {
+                        addMessage("bot", "Gagal mengupload media.");
+                    }
+                } catch (error) {
+                    console.error("Error uploading media:", error);
+                }
             }
         });
+
+        // Modal Admin - Login dan kustomisasi chatbot
+        loginBtn.addEventListener('click', () => {
+            const password = adminPasswordInput.value;
+            if (password === "admin123") { // Password dummy, bisa disesuaikan
+                adminLoggedIn = true;
+                adminModal.style.display = "none";
+                alert("Admin login berhasil!");
+            } else {
+                alert("Password salah!");
+            }
+        });
+
+        // Mengubah Avatar
+        changeAvatarBtn.addEventListener('click', () => {
+            if (adminLoggedIn) {
+                const newAvatar = prompt("Masukkan URL avatar baru:");
+                if (newAvatar) {
+                    avatar.src = newAvatar;
+                    // Kirimkan permintaan ke server untuk menyimpan avatar
+                    fetch('/api/customize-chatbot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ avatar: newAvatar })
+                    });
+                }
+            }
+        });
+
+        // Mengubah Nama Chatbot
+        changeNameBtn.addEventListener('click', () => {
+            if (adminLoggedIn) {
+                const newName = prompt("Masukkan nama chatbot baru:");
+                if (newName) {
+                    botName = newName;
+                    // Kirimkan permintaan ke server untuk menyimpan nama
+                    fetch('/api/customize-chatbot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name: newName })
+                    });
+                }
+            }
+        });
+
+        // Inisialisasi chat ketika halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            addMessage("bot", `Halo! Saya ${botName}. Bagaimana saya bisa membantu Anda hari ini?`);
+        });
+
     </script>
 </body>
-</html>
+            </html>
