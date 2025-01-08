@@ -76,7 +76,7 @@
             background: #1e1e2d;
             flex-shrink: 0;
             position: relative;
-            margin-bottom: 30px; /* Memberi ruang agar footer tidak tertutup */
+            margin-bottom: 30px;
         }
 
         #chat-input input {
@@ -98,8 +98,55 @@
             height: 40px;
         }
 
-        /* Footer */
-     
+        /* Modal Kustomisasi */
+        #customize-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        #customize-content {
+            background: #fff;
+            color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        /* Dashboard Admin */
+        #admin-dashboard {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        #admin-dashboard input {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #admin-dashboard button {
+            width: 100%;
+            padding: 10px;
+            background: #4e4e7c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
 
     </style>
 </head>
@@ -107,13 +154,43 @@
     <div id="chat-container">
         <header>
             <h1>MICHEL - AI</h1>
+            <button id="customize-btn">Kustomisasi</button>
+            <button id="admin-dashboard-btn">Dashboard Admin</button>
         </header>
         <div id="chat-box"></div>
         <div id="chat-input">
             <input type="text" id="user-input" placeholder="Ketik sesuatu atau gunakan 'yt [kata kunci]' untuk mencari video YouTube">
             <button id="send-btn"><img src="https://img101.pixhost.to/images/376/551888124_wanzofc.png" alt="Send"></button>
         </div>
-        
+    </div>
+
+    <!-- Modal Kustomisasi -->
+    <div id="customize-modal">
+        <div id="customize-content">
+            <h2>Customize Chatbot</h2>
+            <form id="customize-form">
+                <label for="chatbot-name">Nama Chatbot:</label>
+                <input type="text" id="chatbot-name" value="MICHEL - AI" required />
+                <br>
+                <label for="chatbot-avatar">Avatar Chatbot URL:</label>
+                <input type="url" id="chatbot-avatar" value="/images/default-avatar.jpg" required />
+                <br>
+                <button type="submit">Simpan</button>
+            </form>
+            <button id="close-customize-btn">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Dashboard Admin -->
+    <div id="admin-dashboard">
+        <h2>Admin Dashboard</h2>
+        <input type="password" id="admin-password" placeholder="Masukkan Password" />
+        <button id="admin-login-btn">Login</button>
+        <div id="admin-content" style="display:none;">
+            <p>Total Percakapan: <span id="total-conversations">0</span></p>
+            <h3>Percakapan Terbaru</h3>
+            <div id="latest-conversations"></div>
+        </div>
     </div>
 
     <script>
@@ -121,6 +198,10 @@
         const chatBox = document.getElementById("chat-box");
         const userInput = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
+        const customizeBtn = document.getElementById("customize-btn");
+        const customizeModal = document.getElementById("customize-modal");
+        const closeCustomizeBtn = document.getElementById("close-customize-btn");
+        const customizeForm = document.getElementById("customize-form");
 
         // Fungsi untuk menambahkan pesan ke chat box
         const appendMessage = (message, type) => {
@@ -201,6 +282,60 @@
             }
 
             userInput.value = ""; // Bersihkan input setelah mengirim pesan
+        });
+
+        // Kustomisasi Chatbot
+        customizeBtn.addEventListener("click", () => {
+            customizeModal.style.display = "block";
+        });
+
+        closeCustomizeBtn.addEventListener("click", () => {
+            customizeModal.style.display = "none";
+        });
+
+        customizeForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = document.getElementById("chatbot-name").value;
+            const avatar = document.getElementById("chatbot-avatar").value;
+            
+            // Kirim permintaan untuk mengubah nama dan avatar chatbot
+            fetch("/api/customize-chatbot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, avatar }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Chatbot berhasil dikustomisasi!");
+                // Update UI chatbot
+                document.querySelector("header h1").textContent = data.settings.name;
+                document.querySelector("#chat-container").style.backgroundImage = `url(${data.settings.avatar})`;
+            })
+            .catch(error => {
+                alert("Error mengkustomisasi chatbot.");
+                console.error(error);
+            });
+            customizeModal.style.display = "none";
+        });
+
+        // Dashboard Admin
+        const adminDashboardBtn = document.getElementById("admin-dashboard-btn");
+        const adminDashboard = document.getElementById("admin-dashboard");
+        const adminPassword = document.getElementById("admin-password");
+        const adminLoginBtn = document.getElementById("admin-login-btn");
+        const adminContent = document.getElementById("admin-content");
+
+        adminDashboardBtn.addEventListener("click", () => {
+            adminDashboard.style.display = "block";
+        });
+
+        adminLoginBtn.addEventListener("click", () => {
+            if (adminPassword.value === "nawa") {
+                adminContent.style.display = "block";
+                adminDashboard.style.display = "none";
+            } else {
+                alert("Password salah!");
+            }
         });
     </script>
 </body>
