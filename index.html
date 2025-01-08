@@ -193,8 +193,10 @@
         <header>
             <h1>MICHEL - AI</h1>
             <img id="avatar" src="https://img101.pixhost.to/images/293/550093499_wanzofc.jpg" alt="Chatbot Avatar">
-            <button id="change-avatar-btn">Ganti Avatar</button>
-            <button id="change-name-btn">Ganti Nama</button>
+            <button id="change-avatar-btn">ganti avatar</button>
+            <button id="change-name-btn">ganti nama</button>
+            <!-- Add the login button -->
+            <button id="login-btn">login admin</button>
         </header>
         <div id="chat-box"></div>
         <div id="chat-input">
@@ -223,9 +225,34 @@
         const avatar = document.getElementById("avatar");
         const changeAvatarBtn = document.getElementById("change-avatar-btn");
         const changeNameBtn = document.getElementById("change-name-btn");
+        const loginBtnClick = document.getElementById("login-btn");
         let adminLoggedIn = false;
         let userAvatar = avatar.src;
         let botName = "MICHEL - AI";
+
+        // Fungsi untuk menyimpan data ke localStorage
+        const saveToLocalStorage = () => {
+            localStorage.setItem("chatbotAvatar", avatar.src);
+            localStorage.setItem("chatbotName", botName);
+        };
+
+        // Fungsi untuk memuat data dari localStorage
+        const loadFromLocalStorage = () => {
+            const savedAvatar = localStorage.getItem("chatbotAvatar");
+            const savedName = localStorage.getItem("chatbotName");
+            
+            if (savedAvatar) {
+                avatar.src = savedAvatar;
+            }
+
+            if (savedName) {
+                botName = savedName;
+                document.querySelector("header h1").innerText = botName;
+            }
+        };
+
+        // Panggil fungsi load saat halaman dimuat
+        window.addEventListener("load", loadFromLocalStorage);
 
         // Fungsi untuk menambahkan pesan ke chat box
         const appendMessage = (message, type) => {
@@ -263,7 +290,7 @@
 
             if (userMessage.startsWith("yt ")) {
                 const query = userMessage.slice(3); 
-                appendMessage("Mencari video di YouTube...", "bot");
+                appendMessage("sabar lagi cari vidio di youtube...", "bot");
 
                 const video = await searchYouTube(query);
                 if (video) {
@@ -308,50 +335,49 @@
             if (password === "wanz-triya") {
                 adminLoggedIn = true;
                 adminModal.style.display = "none";
-                alert("Login berhasil!");
+                alert("login berhasil!");
             } else {
-                alert("Password salah!");
+                alert("password salah!");
             }
         });
 
         // Fungsi untuk mengubah avatar dan nama chatbot jika Admin Login
         changeAvatarBtn.addEventListener("click", () => {
             if (!adminLoggedIn) {
-                alert("Anda perlu login sebagai admin terlebih dahulu.");
+                alert("lu perlu login dulu sebagai admin.");
                 return;
             }
             const newAvatarLink = prompt("Masukkan link gambar JPG untuk Avatar:");
             if (newAvatarLink) {
                 avatar.src = newAvatarLink;
+                saveToLocalStorage(); // Simpan perubahan ke localStorage
             }
         });
 
-        // Mengubah nama chatbot
         changeNameBtn.addEventListener("click", () => {
             if (!adminLoggedIn) {
-                alert("Anda perlu login sebagai admin terlebih dahulu.");
+                alert("lu perlu login dulu sebagai admin.");
                 return;
             }
-            const newName = prompt("Masukkan nama baru untuk chatbot:");
+            const newName = prompt("masukan nama baru untuk chatbot:");
             if (newName) {
                 botName = newName;
                 document.querySelector("header h1").innerText = botName;
+                saveToLocalStorage(); // Simpan perubahan ke localStorage
             }
         });
 
-        // Show login modal only when the button is clicked
-        if (!adminLoggedIn) {
-            const loginButton = document.createElement('button');
-            loginButton.innerText = "Login Admin";
-            loginButton.style.position = 'absolute';
-            loginButton.style.top = '10px';
-            loginButton.style.right = '10px';
-            document.body.appendChild(loginButton);
+        // Show the modal when login button is clicked
+        loginBtnClick.addEventListener("click", () => {
+            adminModal.style.display = "block";
+        });
 
-            loginButton.addEventListener('click', () => {
-                adminModal.style.display = "block";
-            });
-        }
+        // Hide the modal when user clicks outside of it
+        window.addEventListener("click", (e) => {
+            if (e.target === adminModal) {
+                adminModal.style.display = "none";
+            }
+        });
     </script>
 </body>
 </html>
