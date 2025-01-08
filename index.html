@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MICHEL - AI</title>
+    <style>
+        /* Styles for chat container, messages, and modal are the same as before */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #1e1e2d;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background: #2a2a40;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+            position: relative;
+        }
+
+        header {
+            background: #4e4e7c;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: transparent;
+            position: relative;
+            z-index: 1;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message span, .message iframe {
+            background: #4e4e7c;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.user span {
+            background: #1e90ff;
+        }
+
+        #chat-input {
+            display: flex;
+            padding: 10px;
+            background: #1e1e2d;
+            flex-shrink: 0;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        #chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #send-btn {
+            background: none;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        #send-btn img {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Modal Admin */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #2a2a40;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .modal-content input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background: #3a3a5f;
+            color: #fff;
+            border: none;
+        }
+
+        .modal-content button {
+            background: #4e4e7c;
+            padding: 10px;
+            border-radius: 4px;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Avatar Styling */
+        #avatar {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+
+        /* Tombol Ganti Avatar dan Nama */
+        #change-avatar-btn, #change-name-btn {
+            background-color: #4e4e7c;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            border: none;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        #change-avatar-btn:hover, #change-name-btn:hover {
+            background-color: #3a3a5f;
+        }
+
+        @media (max-width: 600px) {
+            #chat-container {
+                max-width: 100%;
+            }
+
+            #chat-box {
+                font-size: 14px; /* Adjust font size for mobile */
+            }
+
+            #send-btn img {
+                width: 35px; /* Smaller send button icon for mobile */
+                height: 35px;
+            }
+
+            /* Tombol ganti lebih besar di mobile */
+            #change-avatar-btn, #change-name-btn {
+                padding: 10px 15px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <header>
+            <h1>MICHEL - AI</h1>
+            <img id="avatar" src="img99.pixhost.to/images/591/512700984_test.jpg" alt="Chatbot Avatar">
+            <button id="change-avatar-btn">Ganti Avatar</button>
+            <button id="change-name-btn">Ganti Nama</button>
+        </header>
+        <div id="chat-box"></div>
+        <div id="chat-input">
+            <input type="text" id="user-input" placeholder="Ketik sesuatu atau gunakan 'yt [kata kunci]' untuk mencari video YouTube">
+            <button id="send-btn"><img src="https://img101.pixhost.to/images/376/551888124_wanzofc.png" alt="Send"></button>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <h2>masukan password</h2>
+            <input type="text" id="adminPassword" placeholder="Password">
+            <button id="loginBtn">login admin</button>
+        </div>
+    </div>
+
+    <script>
+        const YT_API_KEY = "AIzaSyBea6oG4T6FTNMgiVh8nux7d2HM89QHR0g";
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const adminPasswordInput = document.getElementById("adminPassword");
+        const loginBtn = document.getElementById("loginBtn");
+        const adminModal = document.getElementById("adminModal");
+        const avatar = document.getElementById("avatar");
+        const changeAvatarBtn = document.getElementById("change-avatar-btn");
+        const changeNameBtn = document.getElementById("change-name-btn");
+        let adminLoggedIn = false;
+        let userAvatar = avatar.src;
+        let botName = "MICHEL - AI";
+
+        // Fungsi untuk menambahkan pesan ke chat box
+        const appendMessage = (message, type) => {
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("message", type);
+            if (type === "bot" && message.includes("<iframe")) {
+                msgDiv.innerHTML = message;
+            } else {
+                msgDiv.innerHTML = `<span>${message}</span>`;
+            }
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        };
+
+        // Fungsi untuk mencari video di YouTube
+        const searchYouTube = async (query) => {
+            try {
+                const res = await fetch(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${YT_API_KEY}&maxResults=1&type=video`
+                );
+                const data = await res.json();
+                return data.items[0];
+            } catch (error) {
+                console.error("YouTube API Error:", error);
+                return null;
+            }
+        };
+
+        // Fungsi untuk menangani pengiriman pesan
+        sendBtn.addEventListener("click", async () => {
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+
+            appendMessage(userMessage, "user");
+
+            if (userMessage.startsWith("yt ")) {
+                const query = userMessage.slice(3); 
+                appendMessage("Mencari video di YouTube...", "bot");
+
+                const video = await searchYouTube(query);
+                if (video) {
+                    const videoEmbed = `
+                        <iframe 
+                            width="100%" 
+                            height="200" 
+                            src="https://www.youtube.com/embed/${video.id.videoId}" 
+                            frameborder="0" 
+                            allowfullscreen>
+                        </iframe>`;
+                    appendMessage(videoEmbed, "bot");
+                } else {
+                    appendMessage("Maaf, tidak ditemukan video yang cocok.", "bot");
+                }
+            } else {
+                try {
+                    const res = await fetch("/api/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: userMessage }),
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`Server returned ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    appendMessage(data.response, "bot");
+                } catch (error) {
+                    console.error("Error:", error);
+                    appendMessage("Error connecting to chatbot!", "bot");
+                }
+            }
+
+            userInput.value = "";
+        });
+
+        // Fungsi untuk login Admin
+        loginBtn.addEventListener("click", () => {
+            const password = adminPasswordInput.value.trim();
+            if (password === "nawa") {
+                adminLoggedIn = true;
+                adminModal.style.display = "none";
+                alert("Login berhasil!");
+            } else {
+                alert("Password salah!");
+            }
+        });
+
+        // Fungsi untuk mengubah avatar dan nama chatbot jika Admin Login
+        changeAvatarBtn.addEventListener("click", () => {
+            if (!adminLoggedIn) {
+                alert("Anda perlu login sebagai admin terlebih dahulu.");
+                return;
+            }
+            const newAvatarLink = prompt("Masukkan link gambar JPG untuk Avatar:");
+            if (newAvatarLink) {
+                avatar.src = newAvatarLink;
+            }
+        });
+
+        // Mengubah nama chatbot
+        changeNameBtn.addEventListener("click", () => {
+            if (!adminLoggedIn) {
+                alert("Anda perlu login sebagai admin terlebih dahulu.");
+                return;
+            }
+            const newName = prompt("Masukkan nama baru untuk chatbot:");
+            if (newName) {
+                botName = newName;
+                document.querySelector("header h1").innerText = botName;
+            }
+        });
+
+        // Show login modal only when the button is clicked
+        if (!adminLoggedIn) {
+            const loginButton = document.createElement('button');
+            loginButton.innerText = "Login Admin";
+            loginButton.style.position = 'absolute';
+            loginButton.style.top = '10px';
+            loginButton.style.right = '10px';
+            document.body.appendChild(loginButton);
+
+            loginButton.addEventListener('click', () => {
+                adminModal.style.display = "block";
+            });
+        }
+    </script>
+</body>
+</html>
