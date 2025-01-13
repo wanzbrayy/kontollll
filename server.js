@@ -1,9 +1,10 @@
-jconst express = require("express");
+const express = require("express");
 const bodyParser = require("body-parser");
+const path = require("path");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
-const port = 8080;
+const port = 3000;
 
 // API Key
 const apikeynyah = "AIzaSyCfpuve4rPxIrorTgsAd3oYQY9izKQwVSg";
@@ -11,11 +12,13 @@ const genAI = new GoogleGenerativeAI(apikeynyah);
 
 // Middleware
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
+
+// Set static file directory to root (for index.html and other assets)
+app.use(express.static(path.join(__dirname)));
 
 // Routes
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.post("/api/chat", async (req, res) => {
@@ -30,10 +33,12 @@ app.post("/api/chat", async (req, res) => {
     const result = await model.generateContent(text);
     res.json({ reply: result.response.text() });
   } catch (error) {
+    console.error("Error generating response:", error);
     res.status(500).json({ error: "Failed to generate response" });
   }
 });
 
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
